@@ -1,18 +1,19 @@
-name: Mobile App Automation Test
+name: Appium Python Client Test
 
 on: [push]
 
 jobs:
-  android-test:
+  test:
     runs-on: ubuntu-latest
 
     steps:
     - uses: actions/checkout@v2
 
-    - name: Set up JDK 11
+    # Set up JDK 20 (Ensure that the version 20.0.1 is available in the setup-java action)
+    - name: Set up JDK 20.0.1
       uses: actions/setup-java@v2
       with:
-        java-version: '11'  # Especifica la versión exacta de Java 11 si es necesario
+        java-version: '20.0.1'
         distribution: 'adopt'
 
     - name: Set up Python 3.12.1
@@ -20,31 +21,35 @@ jobs:
       with:
         python-version: '3.12.1'
 
+    # Install Android SDK & Emulator
     - name: Install Android SDK
       run: |
-          wget https://dl.google.com/android/repository/commandlinetools-linux-7583922_latest.zip
-          unzip commandlinetools-linux-7583922_latest.zip -d android-sdk
-          echo "ANDROID_SDK_ROOT=$GITHUB_WORKSPACE/android-sdk" >> $GITHUB_ENV
-          mv $ANDROID_SDK_ROOT/cmdline-tools $ANDROID_SDK_ROOT/cmdline-tools-temp
-          mkdir -p $ANDROID_SDK_ROOT/cmdline-tools/latest
-          mv $ANDROID_SDK_ROOT/cmdline-tools-temp/* $ANDROID_SDK_ROOT/cmdline-tools/latest/
-          rm -rf $ANDROID_SDK_ROOT/cmdline-tools-temp
-          echo "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin" >> $GITHUB_PATH
-          yes | $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --licenses
-          $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager "platform-tools" "platforms;android-29" "build-tools;29.0.3" "emulator" "system-images;android-29;default;x86"
+        wget https://dl.google.com/android/repository/commandlinetools-linux-7583922_latest.zip
+        unzip commandlinetools-linux-7583922_latest.zip -d android-sdk
+        echo "ANDROID_SDK_ROOT=$GITHUB_WORKSPACE/android-sdk" >> $GITHUB_ENV
+        mkdir -p $ANDROID_SDK_ROOT/cmdline-tools/latest
+        mv $ANDROID_SDK_ROOT/cmdline-tools/* $ANDROID_SDK_ROOT/cmdline-tools/latest/
+        echo "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin" >> $GITHUB_PATH
+        yes | $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --licenses
+        $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager "platform-tools" "platforms;android-29" "build-tools;29.0.3" "emulator" "system-images;android-29;default;x86"
       
     
+    # Create and start Android emulator
     - name: Create and start Android emulator
       run: |
-        echo "no" | cmdline-tools/bin/avdmanager create avd -n testEmulator -k "system-images;android-29;default;x86" --force
+        echo "no" | $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/avdmanager create avd -n testEmulator -k "system-images;android-29;default;x86" --force
         $ANDROID_SDK_ROOT/emulator/emulator -avd testEmulator -no-audio -no-window -gpu swiftshader_indirect &
         $ANDROID_SDK_ROOT/platform-tools/adb wait-for-device
 
+    # Install Appium Python Client and other dependencies
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install Appium-Python-Client
-        pip install pytest pytest-xdist  # Instala pytest y pytest-xdist para la ejecución paralela
+        pip install appium-python-client==3.1.1
+        pip install pytest pytest-xdist 
+        pip install selenium
+        pip install termgraph
+        pip install colorama
       # Agrega cualquier otra dependencia que tu proyecto requiera
                 
     - name: Change to parallel directory

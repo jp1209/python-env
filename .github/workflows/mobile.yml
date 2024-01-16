@@ -25,13 +25,15 @@ jobs:
           wget https://dl.google.com/android/repository/commandlinetools-linux-7583922_latest.zip
           unzip commandlinetools-linux-7583922_latest.zip -d android-sdk
           echo "ANDROID_SDK_ROOT=$GITHUB_WORKSPACE/android-sdk" >> $GITHUB_ENV
+          mv $ANDROID_SDK_ROOT/cmdline-tools $ANDROID_SDK_ROOT/cmdline-tools-temp
           mkdir -p $ANDROID_SDK_ROOT/cmdline-tools/latest
-          mv $ANDROID_SDK_ROOT/cmdline-tools/* $ANDROID_SDK_ROOT/cmdline-tools/latest/
+          mv $ANDROID_SDK_ROOT/cmdline-tools-temp/* $ANDROID_SDK_ROOT/cmdline-tools/latest/
+          rm -rf $ANDROID_SDK_ROOT/cmdline-tools-temp
           echo "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin" >> $GITHUB_PATH
           yes | $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --licenses
           $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager "platform-tools" "platforms;android-29" "build-tools;29.0.3" "emulator" "system-images;android-29;default;x86"
       
-
+    
     - name: Create and start Android emulator
       run: |
         echo "no" | cmdline-tools/bin/avdmanager create avd -n testEmulator -k "system-images;android-29;default;x86" --force

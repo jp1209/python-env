@@ -1,0 +1,21 @@
+name: Python application test
+
+on: [push]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python 3.x
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.12.1'
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install pytest pytest-xdist  # Instala pytest y pytest-xdist para la ejecución paralela
+    - name: Run tests
+      run: pytest -n 2  # Ejecuta tus pruebas con 2 hilos
